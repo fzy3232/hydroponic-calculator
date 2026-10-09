@@ -7,14 +7,15 @@
   "scripts": {
     "build": "node build.mjs",
     "build:single": "node build.mjs \"../水培计算器\" \"水培营养液计算器.html\"",
+    "data:build": "node tools/build-fertilizers.mjs && node tools/build-crops.mjs && node tools/build-glossary.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "test": "node --test test/core.test.mjs",
     "test:baseline": "node test/baseline.mjs --data data --compare test/baseline.json",
     "baseline": "node test/baseline.mjs --data data",
-    "lint": "eslint src test build.mjs",
-    "lint:fix": "eslint src test build.mjs --fix",
+    "lint": "eslint src test tools build.mjs",
+    "lint:fix": "eslint src test tools build.mjs --fix",
     "verify": "npm run lint && npm test && npm run build"
   },
   "devDependencies": {

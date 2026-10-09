@@ -8,6 +8,7 @@
  */
 
 import { ELEMENTS, DEVIATION_THRESHOLD, NEGLIGIBLE_GRAMS } from '../core/constants.js';
+import { anhydrousDose, anhydrousFormula } from '../core/chem.js';
 import {
   escapeHtml, formatFixed, formatNumber, formatQuantity, formatShort, toNumber,
 } from '../core/utils.js';
@@ -285,12 +286,21 @@ export function resultTemplate(result, targets, water, glossary = []) {
 
   html += `<h3>原料用量（配制 ${formatShort(result.volume)} L 工作液${concentrateSuffix}）</h3>`;
 
+  // 只有库里真用到了水合物，才需要多这一列；全无水时保持原样不增加噪声
+  const hasHydrate = rows.some((item) => anhydrousDose(item.fertilizer.formula, item.grams) !== null);
+
   if (rows.length === 0) {
     html += '<div class="neg">未得到有效用量（可能目标过高或原料不足）。</div>';
   } else {
-    html += '<table class="t-usage"><thead><tr><th>原料</th><th class="num">用量（g）</th>'
-      + '<th class="num">g/L 工作液</th><th>主要贡献</th></tr></thead><tbody>';
+    html += [
+      '<table class="t-usage"><thead><tr><th>原料</th><th class="num">用量（g）</th>',
+      hasHydrate
+        ? '<th class="num" title="买到的若是无水产品：同样多的元素，需要称多少克（等效换算，不改变配方本身）">若买无水物</th>'
+        : '',
+      '<th class="num">g/L 工作液</th><th>主要贡献</th></tr></thead><tbody>',
+    ].join('');
     let total = 0;
+    let anhydrousTotal = 0;
 
     for (const item of rows) {
       total += item.grams;
@@ -307,15 +317,38 @@ export function resultTemplate(result, targets, water, glossary = []) {
         .slice(0, 5)
         .join('，');
 
-      html += `<tr><td>${escapeHtml(item.fertilizer.name)}</td>`
-        + `<td class="num"><strong>${formatQuantity(item.grams)}</strong></td>`
-        + `<td class="num">${formatConcentration(item.grams / result.volume)}</td>`
-        + `<td class="contrib">${contribution === '' ? '—' : contribution}</td></tr>`;
+      const dose = anhydrousDose(item.fertilizer.formula, item.grams);
+      // 无水原料本来就没有"另一种形态"，换算后重量不变 —— 合计必须把它计进去。
+      // 否则左边含全部原料、右边只含水合物，两列口径不同，会让人误以为
+      // 「全买无水物只要这么点」。
+      anhydrousTotal += dose === null ? item.grams : dose.grams;
+      const anhydrousCell = hasHydrate
+        ? `<td class="num">${dose === null ? '—' : formatQuantity(dose.grams)}</td>`
+        : '';
+
+      html += [
+        `<tr><td>${escapeHtml(item.fertilizer.name)}</td>`,
+        `<td class="num"><strong>${formatQuantity(item.grams)}</strong></td>`,
+        anhydrousCell,
+        `<td class="num">${formatConcentration(item.grams / result.volume)}</td>`,
+        `<td class="contrib">${contribution === '' ? '—' : contribution}</td></tr>`,
+      ].join('');
     }
 
-    html += `<tr class="total-row"><td><strong>合计</strong></td>`
-      + `<td class="num"><strong>${formatQuantity(total)}</strong></td>`
-      + `<td class="num">${formatConcentration(total / result.volume)}</td><td></td></tr></tbody></table>`;
+    const anhydrousTotalCell = hasHydrate
+      ? `<td class="num"><strong>${formatQuantity(anhydrousTotal)}</strong></td>`
+      : '';
+    html += [
+      '<tr class="total-row"><td><strong>合计</strong></td>',
+      `<td class="num"><strong>${formatQuantity(total)}</strong></td>`,
+      anhydrousTotalCell,
+      `<td class="num">${formatConcentration(total / result.volume)}</td><td></td></tr></tbody></table>`,
+    ].join('');
+
+    if (hasHydrate) {
+      html += '<div class="sub" style="margin-top:6px">「若买无水物」= 同样多的元素改用无水产品时的称量值'
+        + '（等效换算，配方本身不变）——买到的肥料形态与库中不一致时看这一列。</div>';
+    }
 
     html += traceUsageTemplate(rows);
   }
@@ -384,7 +417,9 @@ export function resultTemplate(result, targets, water, glossary = []) {
   html += '</tbody></table></details>';
 
   // —— 3. 形态核对（结晶水会显著改变用量）——
-  const hydrated = result.usage.filter((item) => item.fertilizer.form && item.fertilizer.form !== '无水');
+  // 判据必须是「化学式里真的有结晶水」，不能用 form 字段：
+  // 螯合物（form='螯合物（按标称含量）'）没有水合/无水之分，按 form 判断会被误纳入。
+  const hydrated = result.usage.filter((item) => anhydrousFormula(item.fertilizer.formula) !== null);
   if (hydrated.length > 0) {
     html += '<h3>形态核对 '
       + '<span class="sub">— 购买时请核对结晶水形态，同一重量下元素含量可差一倍</span></h3>'
@@ -483,6 +518,11 @@ export function fertilizerEditorTemplate(draft) {
       ${compositionCells}
       <td class="form" data-form="${index}">${escapeHtml(fertilizer.form ?? '')}</td>
       <td><span class="del" data-delete="${index}" title="删除该行">×</span></td>
+    </tr>
+    <tr class="formula-error-row" data-formula-error-row="${index}"${fertilizer.formulaError ? '' : ' hidden'}>
+      <td colspan="${9 + ELEMENTS.length}">
+        <span class="formula-error" data-formula-error="${index}">${escapeHtml(fertilizer.formulaError ?? '')}</span>
+      </td>
     </tr>`;
   }).join('');
 

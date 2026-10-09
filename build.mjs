@@ -85,10 +85,10 @@ const crops = cropsFromRows(readCSV(path.join(projectDir, 'data', 'crops.csv')))
 const glossary = glossaryFromRows(readCSV(path.join(projectDir, 'data', 'glossary.csv')));
 
 if (fertilizers.length === 0) {
-  throw new Error('肥料库为空：请先运行 build_fertilizers.py 生成 data/fertilizers.csv');
+  throw new Error('肥料库为空：请检查 data/fertilizers.csv，或运行 npm run data:build 重新生成');
 }
 if (crops.length === 0) {
-  throw new Error('作物库为空：请先运行 build_crops.py 生成 data/crops.csv');
+  throw new Error('作物库为空：请检查 data/crops.csv，或运行 npm run data:build 重新生成');
 }
 
 // —— 3. 组装单文件 HTML ——

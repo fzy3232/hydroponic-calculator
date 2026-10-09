@@ -15,7 +15,7 @@
     pwsh -File test/browser-check.ps1
 #>
 param(
-    [string]$Html = (Join-Path $PSScriptRoot '..\..\水培计算器\水培营养液计算器.html'),
+    [string]$Html = (Join-Path $PSScriptRoot '..\dist\index.html'),
     [switch]$Quiet,
     # 显式允许「找不到浏览器就跳过」。默认不允许：静默跳过会掩盖回归。
     [switch]$AllowSkipBrowser
@@ -121,13 +121,16 @@ $results += Write-Check '模板占位符已全部替换' `
 
 # 8) 配套交付文件完整性
 #
-# 关于启动脚本的编码：cmd.exe 按**系统代码页**（中文 Windows 为 GBK/936）读取批处理文件。
-# 若脚本以 UTF-8 保存，其中的中文文件名会被解成乱码，导致找不到文件而启动失败
+# 关于批处理脚本的编码：cmd.exe 按**系统代码页**（中文 Windows 为 GBK/936）读取批处理文件。
+# 若脚本以 UTF-8 保存，其中的中文文件名会被解成乱码，导致找不到文件而构建失败
 # —— 这是实际踩过的坑，故在此固化为验证项。
-$deliverableDir = Split-Path $htmlPath -Parent
-$launcherPath = Join-Path $deliverableDir '启动计算器.cmd'
+$srcDir = Split-Path $htmlPath -Parent
+# 构建产物在 dist/ 下，而交付文件（README、构建脚本）在项目根，故上跳一级。
+# 兼容直接指向单文件 HTML 的旧用法：父目录不叫 dist 时就用父目录本身。
+$deliverableDir = if ((Split-Path $srcDir -Leaf) -eq 'dist') { Split-Path $srcDir -Parent } else { $srcDir }
+$launcherPath = Join-Path $deliverableDir 'build-windows.bat'
 $hasLauncher = Test-Path $launcherPath
-$results += Write-Check '启动脚本存在' $hasLauncher
+$results += Write-Check '一键构建脚本存在（build-windows.bat）' $hasLauncher
 
 if ($hasLauncher) {
     $launcherBytes = [System.IO.File]::ReadAllBytes($launcherPath)
@@ -138,12 +141,12 @@ if ($hasLauncher) {
             break
         }
     }
-    $results += Write-Check '启动脚本为 GBK 编码（cmd.exe 能正确解析中文路径）' (-not $hasUtf8Chinese)
+    $results += Write-Check '构建脚本为 GBK 编码（cmd.exe 能正确解析中文路径）' (-not $hasUtf8Chinese)
     $hasBom = $launcherBytes.Length -ge 3 -and $launcherBytes[0] -eq 0xEF -and $launcherBytes[1] -eq 0xBB
-    $results += Write-Check '启动脚本无 BOM（BOM 会让 cmd 报错）' (-not $hasBom)
+    $results += Write-Check '构建脚本无 BOM（BOM 会让 cmd 报错）' (-not $hasBom)
 }
 
-$results += Write-Check '使用说明存在' (Test-Path (Join-Path $deliverableDir '使用说明.md'))
+$results += Write-Check 'README 存在' (Test-Path (Join-Path $deliverableDir 'README.md'))
 
 # 9) 交互逻辑：切换作物/生育期应自动载入目标浓度，无需手动点按钮
 $targetInput = [regex]::Match($dom, 'id="t0"[^>]*value="([0-9.]+)"')

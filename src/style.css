@@ -381,21 +381,20 @@ tr.total-row td {
   background: var(--soft);
 }
 
-/* 固定列比例：把散落的空隙收拢到文本列，而不是每列右侧各留一截 */
+/* 固定列比例：把散落的空隙收拢到文本列，而不是每列右侧各留一截。
+ * 注意用 :first-child / :nth-last-child 而不是写死 nth-child(n)——
+ * 「若买无水物」列只在用到水合物时才出现，按列号写会整套错位。 */
 .t-usage {
   table-layout: fixed;
 }
 
-.t-usage th:nth-child(1) {
-  width: 30%;
+.t-usage th:first-child {
+  width: 28%;
 }
 
-.t-usage th:nth-child(2) {
-  width: 14%;
-}
-
-.t-usage th:nth-child(3) {
-  width: 16%;
+/* 末两列：g/L 与主要贡献 */
+.t-usage th:nth-last-child(2) {
+  width: 15%;
 }
 
 .t-achieve {
@@ -736,6 +735,18 @@ details summary {
 
 .panel td.form {
   color: var(--warn);
+}
+
+/* 化学式解析失败时的行内提示：不占正常行高，出错才出现 */
+.panel tr.formula-error-row > td {
+  background: #fdecea;
+  border-top: none;
+  padding: 4px 10px;
+}
+
+.panel .formula-error {
+  color: var(--error);
+  font-size: 12px;
 }
 
 .panel .del {

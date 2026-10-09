@@ -213,12 +213,13 @@ hydroponic-calculator/
 │   ├── verify-recipe.py        用 openpyxl 交叉验证（真实配方）
 │   ├── browser-check.ps1       浏览器端到端验证（29 项断言）
 │   └── capture.ps1             整页截图（CDP，供视觉回归）
-├── tools/                  构建期工具（Python，**不参与应用运行**）
-│   ├── build_fertilizers.py    由化学式生成肥料库 CSV
-│   ├── build_crops.py          生成作物库 CSV
-│   ├── build_glossary.py       生成术语词典 CSV
-│   ├── gen-icon.py             生成应用图标源图
-│   └── app-icon.png            图标源图（gen-icon.py 的产物）
+├── tools/                  构建期工具（不参与应用运行）
+│   ├── build-fertilizers.mjs   由化学式生成肥料库 CSV（复用 core/chem.js）
+│   ├── build-crops.mjs         生成作物库 CSV
+│   ├── build-glossary.mjs      生成术语词典 CSV
+│   ├── sources/                知识数据（JSON）：肥料清单 / 作物目标 / 术语释义
+│   ├── gen-icon.py             生成应用图标源图（Pillow，一次性）
+│   └── app-icon.png            图标源图
 ├── docs/
 │   ├── screenshots/            界面截图
 │   ├── ui-review.md            界面评审与改进记录
@@ -267,26 +268,50 @@ hydroponic-calculator/
 ## 数据来源
 
 - **肥料成分**：由化学式 + IUPAC 原子量精确计算，并与教科书公认值逐项核对
-  （`build_fertilizers.py` 每次运行都会打印自检对照表）
+  （`npm run data:build` 会打印自检对照表）
 - **作物营养目标**：公开文献，逐行标注来源
   （Hoagland & Arnon、日本园试、山崎、雅典农业大学配方表、SARE、IARI）
 - **未找到可靠文献的元素浓度不编造**——宁可留空
 
-## 数据重建（Python 只在这里用到）
+## 数据重建
 
 改了化学式、要加作物、要加术语之后重新生成数据：
 
 ```bash
-python tools/build_fertilizers.py   # 由化学式重算肥料成分（含与教科书值的自检）
-python tools/build_crops.py         # 生成作物库（依赖上一步产出的 fertilizers.csv）
-python tools/build_glossary.py      # 生成术语词典
-python tools/gen-icon.py            # 生成图标源图，之后：npx tauri icon tools/app-icon.png
+npm run data:build                 # 依次重建 肥料库 / 作物库 / 术语库
 ```
+
+也可以单独重建：
+
+```bash
+node tools/build-fertilizers.mjs   # 由化学式重算肥料成分（含与教科书值的自检）
+node tools/build-crops.mjs         # 作物营养目标
+node tools/build-glossary.mjs      # 术语词典
+```
+
+**知识数据**（肥料清单、作物目标、术语释义）在 `tools/sources/*.json`；
+**计算逻辑**直接复用 `src/core/chem.js` —— 构建期与运行期**只有一份化学实现**。
+
+> 这是本仓库的一条硬约束。此前 `build_fertilizers.py` 与 `core/chem.js` 各维护一份
+> 化学解析与形态提示，**实测已经漂移**：CSV 里写「请在 CSV 中把化学式改为 X 后重新导入」，
+> 而界面实时重算写「请把化学式改为 X」——同一功能两种说法。
+> 现已统一由 `core/chem.js` 提供，Python 版删除。
 
 > **这些脚本不参与应用运行**。它们的产物是 `data/*.csv`，
 > 由 `npm run build` 读入并内联进 `dist/index.html`。
-> 便携版 exe 里**没有 Python 运行时**，最终用户也**不需要装 Python**——
-> 可以整个删掉 `tools/` 而不影响构建与运行。
+> 便携版 exe 里没有 Python 运行时，最终用户也不需要装 Python。
+
+## 为什么还有几个 Python 文件
+
+数据构建已全部迁到 Node，剩下 3 个 Python 是**刻意保留**的：
+
+| 文件 | 用途 | 为什么不迁移 |
+| --- | --- | --- |
+| `test/verify-xlsx.py` | 用 openpyxl 读回我们自己生成的 xlsx | **交叉验证的价值就在于换一个独立实现**；改用 JS 就退化成"自己验自己" |
+| `test/verify-recipe.py` | 同上（真实配方用例） | 同上 |
+| `tools/gen-icon.py` | 画图标源图（一次性） | Pillow 绘制；Node 没有零依赖的等价物，且图标与数据/计算无关 |
+
+前两个只在跑交叉验证时用，`gen-icon.py` 只在换图标时用——**都不参与构建与运行**。
 
 ## 常用命令
 

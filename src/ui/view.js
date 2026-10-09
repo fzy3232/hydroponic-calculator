@@ -839,6 +839,18 @@ export function recalculateFertilizerRow(row) {
   if (formCell !== null) {
     formCell.textContent = fertilizer.form ?? '';
   }
+
+  // 化学式解析失败时，16 个元素列全是 0 —— 如果不说，用户只会看到"一片 0"
+  // 且保存后该原料从列表中消失，完全无从排查。这里把原因直接写在行上。
+  const errorMessage = calculated.formulaError ?? '';
+  const errorRow = tableRow.nextElementSibling;
+  if (errorRow !== null && errorRow.hasAttribute('data-formula-error-row')) {
+    errorRow.hidden = errorMessage === '';
+    const errorCell = errorRow.querySelector(`[data-formula-error="${row}"]`);
+    if (errorCell !== null) {
+      errorCell.textContent = errorMessage;
+    }
+  }
 }
 
 /** @param {unknown} value 数值 @returns {string} */
@@ -871,6 +883,9 @@ export function addRow() {
       form: '',
       formHint: '',
     });
+    // 新增行默认给了 KNO3，但 form 是空的 —— 不重算的话这一行会带着空形态
+    // 进库，于是静默失去形态核对。这里立刻按化学式补算一次。
+    recalculateFertilizerRow(state.draft.length - 1);
   } else {
     state.draft.push({
       crop: '新作物',

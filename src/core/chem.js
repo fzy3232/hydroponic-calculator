@@ -193,6 +193,39 @@ export function anhydrousFormula(formula) {
 }
 
 /**
+ * 水合物 → 无水物的等效用量换算。
+ *
+ * 为什么用**摩尔质量比值**而不是元素含量反推：
+ * 每种元素的百分含量都是「该元素质量 ÷ 摩尔质量」，水合与无水共用同一套原子量，
+ * 所以换算系数 k = M_水合 / M_无水 对**所有元素都一致**，一次相乘即可。
+ * 而 `composition` 是 `toFixed(4)` 舍入过的，用它反推会引入舍入误差。
+ *
+ * 用途：用户买到的若是无水产品，同元素量下要称多少克。
+ * **这不改变配方平衡**——只是把"同样多的元素"换成另一形态来称。
+ *
+ * @param {string} formula 水合物的化学式
+ * @param {number} grams 按该水合物算出的用量（g）
+ * @returns {{ formula: string, grams: number, ratio: number } | null}
+ *          本身无水、或化学式无法解析时返回 null
+ */
+export function anhydrousDose(formula, grams) {
+  const anhydrous = anhydrousFormula(formula);
+  if (anhydrous === null) {
+    return null;
+  }
+  const hydratedMass = molarMass(parseFormula(String(formula)));
+  const anhydrousMass = molarMass(parseFormula(anhydrous));
+  if (hydratedMass === 0 || anhydrousMass === 0) {
+    return null;
+  }
+  return {
+    formula: anhydrous,
+    grams: grams * (anhydrousMass / hydratedMass),
+    ratio: hydratedMass / anhydrousMass,
+  };
+}
+
+/**
  * 统计化学式中某基团（如 `NO3`、`NH4`）出现的次数，支持 `(NH4)2` 与 `NH4NO3` 两种写法。
  * @param {string} formula 化学式（应已去掉结晶水）
  * @param {string} group 基团名
@@ -296,7 +329,19 @@ export function calculateComposition(formula, purity = 1, overrides = null) {
   const counts = parseFormula(formula);
   const mass = molarMass(counts);
   if (mass === 0) {
-    return { composition: empty, form: '', formHint: '', molarMass: null };
+    // 解析失败必须**显式报告**：以前这里静默返回全 0，
+    // 用户输入「花多多1号」「15-15-15」或拼错的化学式时，编辑器右侧就是一片 0，
+    // 既没有报错、保存后该原料还会从列表中消失，完全无从排查。
+    const text = String(formula ?? '').trim();
+    return {
+      composition: empty,
+      form: '',
+      formHint: '',
+      molarMass: null,
+      formulaError: text === '' || text === '-'
+        ? ''
+        : `无法从化学式「${text}」推算成分 —— 请检查拼写，或改用标称含量录入`,
+    };
   }
 
   const composition = [...empty];

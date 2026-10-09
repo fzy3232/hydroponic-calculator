@@ -10,8 +10,9 @@ src-tauri/target/
 *.exe
 *.msi
 
-# 数据生成的中间产物（真源是 data/*.csv，本文件由 tools/build_fertilizers.py 产出）
+# 数据生成的中间产物（真源是 data/*.csv；知识数据在 tools/sources/*.json）
 data/fertilizers.json
+__pycache__/
 
 # 测试输出（xlsx 交叉验证脚本的产物）
 test/*.xlsx

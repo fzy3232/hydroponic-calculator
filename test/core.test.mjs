@@ -15,7 +15,9 @@ import { ELEMENTS, MACRO_ELEMENTS, MICRO_ELEMENTS } from '../src/core/constants.
 import {
   toNumber, positiveNumber, formatNumber, formatQuantity, formatFixed, escapeHtml,
 } from '../src/core/utils.js';
-import { calculateComposition, parseFormula, hydrateCount, anhydrousFormula, splitNitrogen } from '../src/core/chem.js';
+import {
+  calculateComposition, parseFormula, hydrateCount, anhydrousFormula, anhydrousDose, splitNitrogen,
+} from '../src/core/chem.js';
 import { solveLeastSquares } from '../src/core/solver.js';
 import { compute, autoPick } from '../src/core/calculator.js';
 import {
@@ -107,6 +109,82 @@ describe('core/chem：化学式解析与成分计算', () => {
     assert.deepEqual(splitNitrogen('NH4H2PO4'), { nitrate: 0, ammonium: 1 });
     assert.deepEqual(splitNitrogen('(NH4)2SO4'), { nitrate: 0, ammonium: 1 });
     assert.deepEqual(splitNitrogen('NH4NO3'), { nitrate: 0.5, ammonium: 0.5 });
+  });
+
+  describe('anhydrousDose：水合物 → 无水物的等效称量', () => {
+    test('换算系数等于两者摩尔质量之比', () => {
+      const dose = anhydrousDose('Ca(NO3)2·4H2O', 100);
+      assert.ok(dose !== null);
+      assert.equal(dose.formula, 'Ca(NO3)2');
+      // Ca(NO3)2·4H2O = 236.146，Ca(NO3)2 = 164.086
+      assert.equal(Number(dose.ratio.toFixed(3)), 1.439);
+      assert.equal(Number(dose.grams.toFixed(3)), 69.485);
+    });
+
+    test('换算后「元素总量」不变 —— 这是换算正确性的核心断言', () => {
+      // 称 100 g 四水物，与称 100/ratio g 无水物，带入的每种元素必须一样多
+      for (const formula of ['Ca(NO3)2·4H2O', 'MgSO4·7H2O', 'ZnSO4·7H2O', 'Na2MoO4·2H2O']) {
+        const dose = anhydrousDose(formula, 100);
+        assert.ok(dose !== null, `${formula} 应能换算`);
+        const hydrated = calculateComposition(formula, 1).composition;
+        const anhydrous = calculateComposition(dose.formula, 1).composition;
+        ELEMENTS.forEach((element, index) => {
+          const fromHydrate = hydrated[index] / 100 * 100;        // 100 g 水合物带入
+          const fromAnhydrous = anhydrous[index] / 100 * dose.grams; // 等效无水物带入
+          assert.ok(
+            Math.abs(fromHydrate - fromAnhydrous) < 0.01,
+            `${formula} → ${dose.formula}：${element} 带入量应一致（${fromHydrate} vs ${fromAnhydrous}）`,
+          );
+        });
+      }
+    });
+
+    test('本身无水、或化学式不可解析时返回 null', () => {
+      assert.equal(anhydrousDose('KNO3', 50), null);
+      assert.equal(anhydrousDose('', 50), null);
+      assert.equal(anhydrousDose('XX2', 50), null);
+    });
+
+    test('无水原料按「重量不变」计入合计，两列口径才一致', () => {
+      // 实拍发现过的 bug：合计行左边含全部原料、右边只累加水合物，
+      // 会让人误读成「全买无水物只要这么点」。无水原料必须原值计入。
+      const items = [
+        { formula: 'KNO3', grams: 50 },                  // 无水 → 原值
+        { formula: 'Ca(NO3)2·4H2O', grams: 100 },         // 四水 → 换算
+        { formula: 'MgSO4·7H2O', grams: 48.87 },          // 七水 → 换算
+      ];
+      const hydratedSide = items.reduce((sum, item) => sum + item.grams, 0);
+      const anhydrousSide = items.reduce((sum, item) => {
+        const dose = anhydrousDose(item.formula, item.grams);
+        return sum + (dose === null ? item.grams : dose.grams);
+      }, 0);
+
+      // 无水那一条两侧相同，其余必然变小
+      assert.ok(anhydrousSide < hydratedSide, '含结晶水时无水侧应更小');
+      assert.ok(anhydrousSide > 50, '无水原料的 50 g 必须计入，不能漏掉');
+      assert.equal(Number((anhydrousSide - 50).toFixed(3)),
+        Number((anhydrousDose('Ca(NO3)2·4H2O', 100).grams
+          + anhydrousDose('MgSO4·7H2O', 48.87).grams).toFixed(3)));
+    });
+
+    test('螯合物（无化学式）不会被误认为水合物', () => {
+      // 形态核对表改用 anhydrousFormula 判据后，螯合物必须被排除
+      assert.equal(anhydrousFormula('(螯合物，按标称含量)'), null);
+      assert.equal(anhydrousDose('(螯合物，按标称含量)', 10), null);
+    });
+  });
+
+  test('化学式解析失败时给出明确原因，不再静默返回全 0', () => {
+    const bad = calculateComposition('花多多1号', 1);
+    assert.equal(bad.molarMass, null);
+    assert.ok(bad.formulaError.includes('花多多1号'), '错误信息应包含原始输入');
+
+    // 空式与螯合占位符不算「错误」，只是没有成分
+    assert.equal(calculateComposition('-', 1).formulaError, '');
+    assert.equal(calculateComposition('', 1).formulaError, '');
+
+    // 能算的化学式不能带错误字段
+    assert.equal(calculateComposition('KNO3', 1).formulaError, undefined);
   });
 
   // 与教科书/肥料标签公认值对照

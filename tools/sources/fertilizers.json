@@ -1,0 +1,323 @@
+[
+ {
+  "name": "硝酸钙(四水)",
+  "formula": "Ca(NO3)2·4H2O",
+  "category": "大量",
+  "no3Ratio": 1.0,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "钙源+硝态氮；吸湿，宜单独存放"
+ },
+ {
+  "name": "硝酸钾",
+  "formula": "KNO3",
+  "category": "大量",
+  "no3Ratio": 1.0,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "钾源+硝态氮，水培最常用"
+ },
+ {
+  "name": "磷酸二氢钾",
+  "formula": "KH2PO4",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "磷钾同补，也用于调 pH"
+ },
+ {
+  "name": "硫酸镁(七水)",
+  "formula": "MgSO4·7H2O",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "镁源+硫；与钙肥不可高浓度混合"
+ },
+ {
+  "name": "硫酸钾",
+  "formula": "K2SO4",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "无氮钾源"
+ },
+ {
+  "name": "硝酸铵",
+  "formula": "NH4NO3",
+  "category": "大量",
+  "no3Ratio": 0.5,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "硝态铵态各半；铵态占比需谨慎"
+ },
+ {
+  "name": "磷酸二氢铵",
+  "formula": "NH4H2PO4",
+  "category": "大量",
+  "no3Ratio": 0.0,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "铵态氮+磷"
+ },
+ {
+  "name": "磷酸氢二铵",
+  "formula": "(NH4)2HPO4",
+  "category": "大量",
+  "no3Ratio": 0.0,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "铵态氮+磷"
+ },
+ {
+  "name": "氯化钾",
+  "formula": "KCl",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "廉价钾源，忌氯作物慎用"
+ },
+ {
+  "name": "硝酸钠",
+  "formula": "NaNO3",
+  "category": "大量",
+  "no3Ratio": 1.0,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "硝态氮+钠"
+ },
+ {
+  "name": "硫酸铵",
+  "formula": "(NH4)2SO4",
+  "category": "大量",
+  "no3Ratio": 0.0,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "纯铵态氮，酸性肥料"
+ },
+ {
+  "name": "磷酸(85%)",
+  "formula": "H3PO4",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 0.85,
+  "overrides": null,
+  "note": "调 pH + 补磷；强酸"
+ },
+ {
+  "name": "硝酸(68%)",
+  "formula": "HNO3",
+  "category": "大量",
+  "no3Ratio": 1.0,
+  "purity": 0.68,
+  "overrides": null,
+  "note": "调 pH + 补硝态氮；强酸"
+ },
+ {
+  "name": "碳酸钾",
+  "formula": "K2CO3",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "钾源，碱性"
+ },
+ {
+  "name": "碳酸氢钾",
+  "formula": "KHCO3",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "钾源+碱度"
+ },
+ {
+  "name": "氢氧化钾",
+  "formula": "KOH",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "调 pH 用，强碱"
+ },
+ {
+  "name": "硫酸钙(二水)",
+  "formula": "CaSO4·2H2O",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "钙源，微溶"
+ },
+ {
+  "name": "氯化钙(二水)",
+  "formula": "CaCl2·2H2O",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "钙源，含氯"
+ },
+ {
+  "name": "硝酸镁(六水)",
+  "formula": "Mg(NO3)2·6H2O",
+  "category": "大量",
+  "no3Ratio": 1.0,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "镁源+硝态氮"
+ },
+ {
+  "name": "硫酸钠",
+  "formula": "Na2SO4",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "调节钠/硫"
+ },
+ {
+  "name": "磷酸二氢钠(二水)",
+  "formula": "NaH2PO4·2H2O",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "磷源，含钠"
+ },
+ {
+  "name": "氯化钠",
+  "formula": "NaCl",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "补钠/氯"
+ },
+ {
+  "name": "硅酸钾",
+  "formula": "K2SiO3",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "硅源+钾（抗病、抗倒伏）"
+ },
+ {
+  "name": "硅酸钠(九水)",
+  "formula": "Na2SiO3·9H2O",
+  "category": "大量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "硅源，碱性"
+ },
+ {
+  "name": "硼酸",
+  "formula": "H3BO3",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "硼源；过量易毒害"
+ },
+ {
+  "name": "硼砂(十水)",
+  "formula": "Na2B4O7·10H2O",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "硼源+钠"
+ },
+ {
+  "name": "硫酸锰(一水)",
+  "formula": "MnSO4·H2O",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "锰源"
+ },
+ {
+  "name": "硫酸锌(七水)",
+  "formula": "ZnSO4·7H2O",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "锌源"
+ },
+ {
+  "name": "硫酸铜(五水)",
+  "formula": "CuSO4·5H2O",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "铜源；极微量即致毒"
+ },
+ {
+  "name": "钼酸钠(二水)",
+  "formula": "Na2MoO4·2H2O",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "钼源+钠"
+ },
+ {
+  "name": "钼酸铵(四水)",
+  "formula": "(NH4)6Mo7O24·4H2O",
+  "category": "微量",
+  "no3Ratio": 0.0,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "钼源+铵态氮"
+ },
+ {
+  "name": "硫酸亚铁(七水)",
+  "formula": "FeSO4·7H2O",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": null,
+  "note": "铁源；易氧化沉淀，需螯合或现配"
+ },
+ {
+  "name": "螯合铁 Fe-EDTA",
+  "formula": "-",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": {
+   "Fe": 13.0
+  },
+  "note": "最常用铁源，pH<6.5 稳定"
+ },
+ {
+  "name": "螯合铁 Fe-DTPA",
+  "formula": "-",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": {
+   "Fe": 11.0
+  },
+  "note": "适用 pH 范围更宽(pH<7.5)"
+ },
+ {
+  "name": "螯合铁 Fe-EDDHA",
+  "formula": "-",
+  "category": "微量",
+  "no3Ratio": null,
+  "purity": 1.0,
+  "overrides": {
+   "Fe": 6.0
+  },
+  "note": "高 pH 仍有效，价格高"
+ }
+]
