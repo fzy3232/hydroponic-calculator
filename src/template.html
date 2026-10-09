@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>水培营养液配方计算器</title>
+<style>/*__STYLE__*/</style>
+</head>
+<body>
+<!-- BUILD:STRIP:START —— 此段仅存在于源模板中，构建时会被剔除 -->
+<div style="margin:0;padding:18px 22px;background:#fdecea;border-bottom:4px solid #c0392b;
+            font-family:'Microsoft YaHei',sans-serif;color:#8c2318;line-height:1.7">
+  <div style="font-size:18px;font-weight:700;margin-bottom:6px">⚠ 这是源模板，不能直接使用</div>
+  <div>本文件的样式、脚本与数据目前都还是<b>占位符</b>
+    （<code>/*__STYLE__*/</code>、<code>/*__APP__*/</code>、<code>/*__FERTILIZERS__*/</code>），
+    必须经过构建才会变成可运行的程序。</div>
+  <div style="margin-top:10px">请改为双击打开成品，或在本项目目录执行：
+    <code style="background:#fff;padding:2px 6px;border-radius:3px">npm run build</code></div>
+</div>
+<!-- BUILD:STRIP:END -->
+
+<!-- ============ 顶部栏（冻结，不随内容滚动）============ -->
+<header>
+  <h1>水培营养液配方计算器</h1>
+  <span class="meta" id="dataMeta">数据加载中…</span>
+  <span class="spacer"></span>
+  <button id="btnGlossary" title="解释本工具里出现的专业术语，以及它们对种植的影响">📖 术语词典</button>
+</header>
+
+<!-- ============ 主体：左侧导航 + 右侧内容 ============ -->
+<div class="app-body">
+
+  <!-- 左侧菜单栏（冻结） -->
+  <nav class="sidebar">
+    <button class="nav-item is-active" data-view="calc" type="button">
+      <span class="nav-icon">⚗️</span>
+      <span class="nav-text">
+        <span class="nav-label">化学计算</span>
+        <span class="nav-desc">选作物 → 定目标 → 配原料 → 算用量</span>
+      </span>
+    </button>
+    <button class="nav-item" data-view="data" type="button">
+      <span class="nav-icon">🗄️</span>
+      <span class="nav-text">
+        <span class="nav-label">数据编辑</span>
+        <span class="nav-desc">肥料库 / 作物库 / 术语库</span>
+      </span>
+    </button>
+  </nav>
+
+  <!-- 内容区（独立滚动） -->
+  <main class="content" id="contentArea">
+
+    <!-- ========== 视图一：化学计算 ========== -->
+    <section id="view-calc">
+      <div class="card">
+        <h2>① 选择作物与生育期 <span class="hint">切换作物或生育期会<b>自动载入</b>该阶段的营养目标，无需额外操作</span></h2>
+        <div class="body">
+          <div class="row">
+            <div class="fld"><label>作物</label><select id="selCrop"></select></div>
+            <div class="fld"><label>生育期</label><select id="selStage"></select></div>
+            <div class="fld"><label>配制体积（升）</label><input type="number" id="volume" value="100" min="0.1" step="0.1" style="width:100px"></div>
+            <div class="fld"><label title="只影响母液的配制体积与 A/B 分桶提示，不改变各元素的目标浓度">母液浓缩倍数（1=直接配）</label><input type="number" id="concentrate" value="1" min="1" step="1" style="width:120px"></div>
+            <button id="btnLoadTarget" class="ghost" title="把目标浓度恢复为该生育期的文献值">恢复文献值</button>
+          </div>
+          <div id="cropInfo" class="notes"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>② 营养目标浓度（mg/L = ppm） <span class="hint">可直接修改；元素名下方小字为该阶段文献参考值</span></h2>
+        <div class="body">
+          <div class="grid-elem" id="targetGrid"></div>
+          <div class="sep"></div>
+          <div class="flexline">
+            <button class="subtle" id="btnClearTarget">清零</button>
+            <button class="subtle" id="btnHalfTarget">半浓度(EC减半)</button>
+            <span class="hint" style="color:var(--muted)">提示：微量元素通常不随大量元素等比调整，减半时请复核</span>
+            <span class="hint" id="targetStatus" style="color:var(--ok)"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>③ 水源本底（可选） <span class="hint">自来水/井水自带的元素会补进配方，需从目标中扣除</span></h2>
+        <div class="body">
+          <details id="waterDetails">
+            <summary>展开填写水质检测值</summary>
+            <div class="sep"></div>
+            <div class="grid-elem" id="waterGrid"></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>④ 选择原料 <span class="hint" id="fertCount"></span></h2>
+        <div class="body">
+          <div class="flexline" style="margin-bottom:8px">
+            <button class="ghost" id="btnAutoPick">智能推荐</button>
+            <button class="subtle" id="btnSelectMacro">只选大量元素</button>
+            <button class="subtle" id="btnSelectAll">全选</button>
+            <button class="subtle" id="btnSelectNone">全不选</button>
+            <span class="hint" style="color:var(--muted)">智能推荐 = 标准组合优先 + 按需求量加权 + 分域约束 + 偏差驱动补料</span>
+          </div>
+          <div class="scroll"><div class="fert-list" id="fertList"></div></div>
+        </div>
+      </div>
+
+      <div class="card is-goal">
+        <h2>⑤ 倒算原料用量</h2>
+        <div class="body">
+          <button id="btnCalc" style="padding:9px 26px;font-size:14px">开始计算</button>
+          <button id="btnExportExcel" class="ghost" title="导出为 Excel 工作簿：配方信息 / 原料用量 / 目标达成 / 形态核对。数字以数值类型写入，可在表格里继续计算">导出 Excel</button>
+          <button id="btnPrint" class="subtle" title="用系统打印对话框打印（打印预览只保留结果表）">打印</button>
+          <span id="calcTiming" class="hint" style="color:var(--muted);margin-left:10px"></span>
+          <div id="resultBox"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 视图二：数据编辑 ========== -->
+    <section id="view-data" hidden>
+      <div class="card">
+        <h2>肥料库 / 作物库 / 术语库 <span class="hint">改动自动保存在本机，下次打开自动生效；换电脑请用导出/导入 CSV</span></h2>
+        <div class="body">
+          <div class="group-label">在页面内直接编辑</div>
+          <div class="flexline">
+            <button class="ghost" id="btnOpenFert">编辑肥料库</button>
+            <button class="ghost" id="btnOpenCrop">编辑作物库</button>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="group-label">从 CSV 导入（覆盖当前数据）</div>
+          <div class="flexline">
+            <button class="subtle" id="btnImportFert">导入肥料CSV</button>
+            <button class="subtle" id="btnImportCrop">导入作物CSV</button>
+            <button class="subtle" id="btnImportGlossary">导入术语CSV</button>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="group-label">导出为 CSV（备份 / 迁移到另一台电脑）</div>
+          <div class="flexline">
+            <button class="subtle" id="btnExportFert">导出肥料CSV</button>
+            <button class="subtle" id="btnExportCrop">导出作物CSV</button>
+            <button class="subtle" id="btnExportGlossary">导出术语CSV</button>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="group-label">其他</div>
+          <div class="flexline">
+            <button class="subtle" id="btnResetData">恢复内置数据</button>
+          </div>
+
+          <input type="file" id="fileFert" accept=".csv,.txt" hidden>
+          <input type="file" id="fileCrop" accept=".csv,.txt" hidden>
+          <input type="file" id="fileGlossary" accept=".csv,.txt" hidden>
+
+          <div id="dataStatus" class="notes"></div>
+        </div>
+      </div>
+
+      <div class="card is-notes">
+        <h2>说明与提示</h2>
+        <div class="body notes">
+          <ul>
+            <li>本工具为<strong>自用计算器</strong>：给定目标浓度与所选原料，用线性最小二乘反求各原料用量。</li>
+            <li>肥料成分由<strong>化学式自动计算</strong>，不依赖任何第三方数据库；改化学式即可自动重算含量。</li>
+            <li>若某目标元素<strong>没有任何选中原料能提供</strong>，该元素无法达成，会以警告列出。</li>
+            <li>解出<strong>负用量</strong>时会自动剔除该原料后重算（迭代非负化），避免出现物理上不可执行的配方。</li>
+            <li>钙肥与硫酸盐/磷酸盐<strong>不可高浓度混合</strong>（会沉淀）；配母液时应分 A/B 桶。</li>
+            <li>数据以 CSV 预置，可在页面内直接编辑，也可用 Excel 编辑后导入。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ 数据编辑器面板 ============ -->
+<div class="mask" id="editor" hidden>
+  <div class="panel">
+    <div class="panel-head">
+      <strong id="editorTitle">数据编辑器</strong>
+      <span class="hint" id="editorHint" style="color:var(--muted);font-size:12px"></span>
+      <span style="flex:1"></span>
+      <button class="subtle" id="btnEditorAdd">＋ 新增一行</button>
+      <button id="btnEditorSave">保存改动</button>
+      <button class="ghost" id="btnEditorClose">关闭</button>
+    </div>
+    <div class="panel-body"><table id="editorTable"></table></div>
+    <div class="panel-foot" id="editorFoot"></div>
+  </div>
+</div>
+
+<!-- ============ 术语词典面板 ============ -->
+<div class="mask" id="glossaryPanel" hidden>
+  <div class="panel">
+    <div class="panel-head">
+      <strong>术语词典</strong>
+      <span class="hint" style="color:var(--muted);font-size:12px">
+        每条都说明「含义」与「对种植的影响」
+      </span>
+      <span style="flex:1"></span>
+      <input type="search" id="glossarySearch" placeholder="搜索术语或关键词…" style="width:230px">
+      <button class="ghost" id="btnGlossaryClose">关闭</button>
+    </div>
+    <div class="panel-body" id="glossaryBody"></div>
+    <div class="panel-foot" id="glossaryFoot"></div>
+  </div>
+</div>
+
+<script>/*__APP__*/</script>
+<script type="application/json" id="data-fertilizers">/*__FERTILIZERS__*/</script>
+<script type="application/json" id="data-crops">/*__CROPS__*/</script>
+<script type="application/json" id="data-glossary">/*__GLOSSARY__*/</script>
+</body>
+</html>

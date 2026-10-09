@@ -1,0 +1,20 @@
+node_modules/
+
+# 前端构建产物：clone 后由 npm run build 重新生成，不入库
+dist/
+
+# Rust 构建产物
+src-tauri/target/
+
+# 打包产物：应发布到 GitHub Releases，而不是进仓库
+*.exe
+*.msi
+
+# 数据生成的中间产物（真源是 data/*.csv，本文件由 tools/build_fertilizers.py 产出）
+data/fertilizers.json
+
+# 测试输出（xlsx 交叉验证脚本的产物）
+test/*.xlsx
+
+# 日志
+*.log

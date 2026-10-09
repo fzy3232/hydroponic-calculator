@@ -1,0 +1,919 @@
+/* 水培营养液配方计算器 —— 样式表（与模板/逻辑分离）
+ *
+ * 灰色按**语义**分档，而不是每处随手取一个近似值：
+ *   文字 3 档：--ink（正文）/ --ink-2（次要）/ --muted（说明）
+ *   边框 3 档：--line（卡片）/ --line-soft（表格内线）/ --line-strong（输入框）
+ *   背景 4 档：--bg（页面）/ --head（卡片头）/ --soft（表头）/ --btn（按钮）
+ * 归并前有 7 档文字灰，其中多组差值仅 2–4/255，肉眼不可辨且无法维护。
+ *
+ * 字号只保留 5 级（主页面 17/14/13/12/11），面板内 3 级（14/13/12）。
+ */
+
+:root {
+  --bg: #f4f6f8;
+  --card: #fff;
+  --head: #f0f4f9;
+  --soft: #f6f8fb;
+  --btn: #eef1f5;
+  --line: #dde3ea;
+  --line-soft: #e6eaef;
+  --line-strong: #c6ccd4;
+  --ink: #1f2933;
+  --ink-2: #4a5561;
+  /* 比原来的 #6b7785 加深一档：原值在 #fff 上只有 4.6:1、在卡片头上 4.0:1 */
+  --muted: #5c6875;
+  --brand: #2f6fd0;
+  --brand-dark: #2559a8;
+  --ok: #1a7f37;
+  --warn: #b45309;
+  --error: #c0392b;
+  font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  /* 桌面应用布局：整页不滚动，只有内容区滚动 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---------- 顶部 ---------- */
+header {
+  background: var(--brand);
+  color: #fff;
+  padding: 12px 18px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+header h1 {
+  font-size: 17px;
+  margin: 0;
+  font-weight: 600;
+}
+
+header .meta {
+  font-size: 12px;
+}
+
+header .spacer {
+  flex: 1;
+}
+
+/* header 底色与全局按钮底色都是 var(--brand)，裸 button 在这里会完全「隐形」，
+ * 所以蓝底上的按钮必须单独一档（白色半透明 + 白描边）。 */
+header button,
+header button.subtle {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+
+header button:hover,
+header button.subtle:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ---------- 主体：顶栏冻结 + 左侧导航 + 内容区独立滚动 ---------- */
+.app-body {
+  flex: 1;
+  display: flex;
+  min-height: 0; /* 关键：不设这一条，子元素的 overflow-y 不会生效 */
+}
+
+.sidebar {
+  flex: 0 0 216px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 10px;
+  background: #fff;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+/* 侧栏按钮必须覆盖全局 button 的品牌蓝底白字 */
+.nav-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: var(--soft);
+}
+
+.nav-item.is-active {
+  background: #eaf1fb;
+  border-color: #c6dcf7;
+  color: var(--brand-dark);
+}
+
+.nav-icon {
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nav-label {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.nav-desc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.nav-item.is-active .nav-desc {
+  color: #4a6ea8;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.content > section {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* 数据编辑视图里的分组标题 */
+.group-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.card > h2 {
+  font-size: 14px;
+  margin: 0;
+  padding: 10px 16px;
+  background: var(--head);
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.card > h2 .hint {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ⑤ 是任务终点、⑦ 是附录 —— 两者都不该与功能卡同权 */
+.card.is-goal > h2 {
+  background: #eaf1fb;
+  color: var(--brand-dark);
+}
+
+.card.is-notes > h2 {
+  background: transparent;
+  border-bottom: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card .body {
+  padding: 14px 16px;
+}
+
+/* 结果区分节标题（原料用量 / 形态核对等） */
+.card .body h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 20px 0 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.card .body > h3:first-child {
+  margin-top: 0;
+}
+
+.card .body h3 .sub {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---------- 表单 ---------- */
+.row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.fld {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fld label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+#selCrop,
+#selStage {
+  min-width: 180px;
+}
+
+select,
+input,
+button {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+select,
+input[type="number"],
+input[type="text"] {
+  padding: 5px 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: #fff;
+}
+
+select:focus,
+input:focus {
+  outline: 2px solid #a9c7f0;
+  outline-offset: -1px;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--brand);
+  width: 14px;
+  height: 14px;
+}
+
+button {
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--brand-dark);
+}
+
+/* 有明确意图的辅助动作 */
+button.ghost {
+  background: #fff;
+  color: var(--brand);
+  border-color: #a9c7f0;
+}
+
+button.ghost:hover {
+  background: #eef4fd;
+}
+
+/* 批量 / 工具类动作 */
+button.subtle {
+  background: var(--btn);
+  color: var(--ink-2);
+  border-color: var(--line);
+}
+
+button.subtle:hover {
+  background: #e2e7ee;
+}
+
+/* ---------- 表格 ---------- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid var(--line-soft);
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+th {
+  background: var(--soft);
+  font-weight: 600;
+  text-align: left;
+}
+
+/* 数值列右对齐 + 等宽数字：
+ * 数值比较表必须末位对齐，否则每格右侧留白不等、无法比较量级。
+ * 这是本页最高频的阅读动作（核对用量与达成度）。 */
+th.num,
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 化学式用等宽字体，元素符号与下标对齐更清楚 */
+td.formula,
+.fert-item small {
+  font-family: Consolas, "Courier New", monospace;
+}
+
+/* 下标：缩小但不撑开行高（line-height: 0 是标准做法，
+ * 否则 <sub> 会把整行行距顶大，表格看起来忽高忽低） */
+sub {
+  font-size: 0.72em;
+  line-height: 0;
+}
+
+td.contrib {
+  color: var(--muted);
+}
+
+tr.total-row td {
+  background: var(--soft);
+}
+
+/* 固定列比例：把散落的空隙收拢到文本列，而不是每列右侧各留一截 */
+.t-usage {
+  table-layout: fixed;
+}
+
+.t-usage th:nth-child(1) {
+  width: 30%;
+}
+
+.t-usage th:nth-child(2) {
+  width: 14%;
+}
+
+.t-usage th:nth-child(3) {
+  width: 16%;
+}
+
+.t-achieve {
+  table-layout: fixed;
+}
+
+.t-achieve th:first-child {
+  width: 16%;
+}
+
+/* ---------- 元素输入网格 ---------- */
+.grid-elem {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+}
+
+.elem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  padding: 6px 8px;
+}
+
+.elem .k {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.elem input {
+  width: 100%;
+  text-align: right;
+  padding: 3px 5px;
+}
+
+/* 文献参考值：这是用户判断「要不要改目标」的依据，不能是全页对比度最低的文字。
+ * 单独占一行，保证每个格子等高（三位数的参考值不会再撑高格子）。 */
+.elem .rng {
+  font-size: 11px;
+  line-height: 1.2;
+  min-height: 13px;
+  color: var(--muted);
+}
+
+/* 用户手改过目标后，让参考值承担「你已偏离文献值」的提示职责 */
+.elem .rng.deviated {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+/* ---------- 原料列表 ---------- */
+.scroll {
+  max-height: 311px;
+  overflow: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+}
+
+.fert-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 2px;
+  padding: 8px;
+}
+
+.fert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.fert-item:hover {
+  background: #f2f6fc;
+}
+
+.fert-item input {
+  margin-top: 2px;
+  flex: 0 0 auto;
+}
+
+.fert-item .nm {
+  flex: 1;
+  min-width: 0;
+}
+
+.fert-item .nm small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 结果区 ---------- */
+#resultBox {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+/* 未计算时不显示那条分隔线 */
+#resultBox:empty {
+  margin-top: 0;
+  border-top: none;
+  padding-top: 0;
+}
+
+.neg {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.bad {
+  background: #fdecea !important;
+}
+
+.warnrow {
+  background: #fff8e6 !important;
+}
+
+/* 达成度表默认收起；只有出现 >10% 偏差时才由模板加 open */
+details.achieve > summary {
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--ink);
+  list-style-position: inside;
+}
+
+details.achieve > summary .sum {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 8px;
+}
+
+details.achieve[open] > summary {
+  margin-bottom: 8px;
+}
+
+/* 微量原料的母液配制建议 */
+.trace-tip {
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: #f7fbf7;
+  border-left: 3px solid #7fb069;
+  border-radius: 0 4px 4px 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.trace-tip .sub {
+  color: var(--muted);
+  margin: 2px 0 4px;
+}
+
+.trace-tip ul {
+  margin: 4px 0 0 18px;
+  padding: 0;
+}
+
+.trace-tip li {
+  margin-top: 2px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9px;
+  font-size: 11px;
+  background: var(--btn);
+  color: var(--ink-2);
+}
+
+.tag.g {
+  background: #e6f4ea;
+  color: var(--ok);
+}
+
+.tag.r {
+  background: #fdecea;
+  color: var(--error);
+}
+
+.tag.y {
+  background: #fff4e0;
+  color: var(--warn);
+}
+
+.notes {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+  line-height: 1.7;
+}
+
+.notes ul {
+  margin: 4px 0 0 18px;
+  padding: 0;
+}
+
+.notes li + li {
+  margin-top: 4px;
+}
+
+details summary {
+  cursor: pointer;
+  color: var(--brand);
+  font-size: 12px;
+}
+
+.flexline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sep {
+  height: 1px;
+  background: var(--line);
+  margin: 12px 0;
+}
+
+/* ---------- 数据编辑面板 ---------- */
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 28, 38, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+}
+
+.mask[hidden] {
+  display: none;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 8px;
+  width: 97vw;
+  height: 93vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--head);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.panel-head strong {
+  font-size: 14px;
+}
+
+.panel-body {
+  flex: 1;
+  overflow: auto;
+}
+
+.panel-foot {
+  padding: 8px 14px;
+  background: var(--soft);
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.panel table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+
+.panel th,
+.panel td {
+  border-right: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 1px 4px;
+  white-space: nowrap;
+}
+
+.panel th {
+  background: var(--soft);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-weight: 600;
+  text-align: left;
+}
+
+.panel input,
+.panel select {
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 12px;
+  width: 100%;
+  min-width: 64px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.panel input[type="checkbox"] {
+  width: auto;
+  min-width: 0;
+}
+
+.panel td.calc {
+  background: #f6fbf6;
+  color: #2c6e49;
+  text-align: right;
+  font-family: Consolas, "Courier New", monospace;
+}
+
+.panel td.form {
+  color: var(--warn);
+}
+
+.panel .del {
+  color: var(--error);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0 7px;
+  font-size: 14px;
+}
+
+.panel .del:hover {
+  background: #fdecea;
+}
+
+/* ---------- 术语词典 ---------- */
+.glossary {
+  padding: 12px 16px;
+}
+
+.glossary-category {
+  font-size: 13px;
+  margin: 16px 0 8px;
+  padding: 6px 10px;
+  background: var(--head);
+  border-left: 3px solid var(--brand);
+  border-radius: 0 4px 4px 0;
+  color: var(--ink);
+}
+
+.glossary-category:first-child {
+  margin-top: 0;
+}
+
+.glossary-item {
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+
+.glossary-item:hover {
+  border-color: #c9d6e6;
+}
+
+.glossary-term {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--brand-dark);
+  margin-bottom: 4px;
+}
+
+.glossary-line {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--ink-2);
+  margin-top: 4px;
+}
+
+.glossary-line .label {
+  display: inline-block;
+  min-width: 76px;
+  color: var(--muted);
+  font-size: 12px;
+  vertical-align: top;
+}
+
+.glossary-line.impact {
+  background: #f7fbf7;
+  border-left: 3px solid #7fb069;
+  border-radius: 0 4px 4px 0;
+  padding: 5px 8px;
+  margin-top: 6px;
+}
+
+.glossary-line strong {
+  color: var(--warn);
+}
+
+/* 有悬浮解释的元素名 */
+.elem .k span[title] {
+  border-bottom: 1px dashed #a9b4c0;
+  cursor: help;
+}
+
+/* ---------- 窄屏最小子集 ----------
+ * 不做完整移动端适配（编辑器改造是成本主体），只保证核心流程可用：
+ * 结果表可横向滚动，网格退化为单列。 */
+@media (max-width: 720px) {
+  /* 窄屏：侧栏转为顶部横向条 */
+  .app-body {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex: 0 0 auto;
+    flex-direction: row;
+    padding: 8px;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .nav-item {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .nav-desc {
+    display: none;
+  }
+
+  .content {
+    padding: 10px;
+  }
+
+  #resultBox table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .grid-elem,
+  .fert-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 打印 ----------
+ * 用户会把配方带进种植现场。file:// 下不能引外部资源，纯 CSS 即可。
+ * 注意：偏差行的红/黄底在黑白打印中失效，因此改用边框标记。 */
+@media print {
+  header,
+  .sidebar,
+  .mask,
+  button {
+    display: none !important;
+  }
+
+  /* 打印要整页展开，取消「只有内容区滚动」的约束 */
+  html,
+  body {
+    height: auto;
+    display: block;
+    overflow: visible;
+    background: #fff;
+  }
+
+  .app-body {
+    display: block;
+  }
+
+  .content {
+    padding: 0;
+    overflow: visible;
+  }
+
+  .content > section {
+    max-width: none;
+  }
+
+  .card {
+    border-color: #999;
+    break-inside: avoid;
+  }
+
+  .bad {
+    background: none !important;
+    border: 2px solid #000 !important;
+  }
+
+  .warnrow {
+    background: none !important;
+    border: 1px dashed #666 !important;
+  }
+
+  details.achieve > summary {
+    list-style: none;
+  }
+}

@@ -1,0 +1,19 @@
+[package]
+name = "hydroponic-calculator"
+version = "0.1.0"
+description = "水培营养液配方计算器"
+edition = "2021"
+
+[lib]
+name = "hydroponic_calculator_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+# 用于启动失败时的原生消息框（release 版没有控制台，stderr 用户看不到）
+rfd = "0.16"

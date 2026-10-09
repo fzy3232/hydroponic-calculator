@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"主窗口的最小权限集：核心默认 + 另存为对话框 + 写文件（供 CSV 导出）","local":true,"windows":["main"],"permissions":["core:default","dialog:allow-save","fs:allow-write-file",{"identifier":"fs:scope","allow":[{"path":"**"}]}]}}

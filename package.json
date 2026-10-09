@@ -1,0 +1,26 @@
+{
+  "name": "hydroponic-calculator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "水培营养液配方计算器：core 逻辑 / ui 模板与视图分层，同时产出 Tauri 桌面版与单文件 HTML 版",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:single": "node build.mjs \"../水培计算器\" \"水培营养液计算器.html\"",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "test": "node --test test/core.test.mjs",
+    "test:baseline": "node test/baseline.mjs --data data --compare test/baseline.json",
+    "baseline": "node test/baseline.mjs --data data",
+    "lint": "eslint src test build.mjs",
+    "lint:fix": "eslint src test build.mjs --fix",
+    "verify": "npm run lint && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "esbuild": "^0.25.0",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0"
+  }
+}
